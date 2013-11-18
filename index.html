@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <script src="js/jquery.js"></script>
+        <script src="js/monster.js"></script>
+        <script src="socket.io/socket.io.js"></script>
+        <link href="css/monster.css" rel="stylesheet"></link>
+    </head>
+
+    <div id="stage"></div>
+
+    <script>
+        // var name = prompt('Name?');
+        name = name || (new Date).getTime();
+
+        var socket = io.connect('http://localhost'),
+            stage = new Stage('#stage'),
+            currentMsg = '';
+
+        var me = new Monster({name: name});
+
+        socket.emit('new monster', me.toData());
+        stage.add(me);
+
+        $(document).on('keydown', handleKeypress);
+
+        socket.on('current monsters', addMonsters);
+        socket.on('new monster', addMonster)
+        socket.on('move', updateMonster);
+        socket.on('say', talk);
+
+        function moveLeft() {
+            me.moveLeft();
+            socket.emit('move', me.toData());
+        }
+
+        function moveRight() {
+            me.moveRight();
+            socket.emit('move', me.toData());
+        }
+
+        function talk(data) {
+            stage.monsterTalk(data);
+        }
+
+        function updateMonster(monster) {
+            stage.updateMonster(monster);
+        }
+
+        function sendMessage() {
+            me.say(currentMsg);
+            socket.emit('say', {monster: me.toData(),  msg: currentMsg});
+            currentMsg = '';
+        }
+
+        function handleKeypress(e) {
+            if (e.which === 37) moveLeft();
+            if (e.which === 39) moveRight();
+            if (e.which === 13) sendMessage();
+            if (e.which >= 65 && e.which <= 90) {
+                currentMsg += String.fromCharCode(e.which + 32);
+            } else if (e.which === 32) {
+                currentMsg += ' ';
+            }
+        }
+
+        function addMonster(monsterData) {
+            var newMonster = new Monster(monsterData);
+            stage.add(newMonster);
+        }
+
+        function addMonsters(monsters) {
+            stage.addOrUpdateMonsters(monsters);
+        }
+
+    </script>
+</html>
