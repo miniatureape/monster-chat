@@ -3,7 +3,7 @@ var express = require('express')
 , server = require('http').createServer(app)
 , io = require('socket.io').listen(server);
 
-server.listen(8000);
+server.listen(8080);
 
 app.use("/css", express.static(__dirname + '/css'));
 app.use("/js", express.static(__dirname + '/js'));
